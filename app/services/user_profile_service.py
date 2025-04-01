@@ -91,6 +91,18 @@ class UserProfileService:
             self._generate_timing_based_recommendations(profile)
         )
         
+        # 基于社交情绪的推荐
+        if context and "social_score" in context:
+            recommendations.extend(
+                self._generate_social_recommendations(profile, context)
+            )
+            
+        # 基于风险因素的推荐
+        if context and "risk_level" in context:
+            recommendations.extend(
+                self._generate_risk_prevention_recommendations(profile, context)
+            )
+        
         # 排序推荐
         recommendations.sort(key=lambda x: x.relevance_score, reverse=True)
         
@@ -288,6 +300,106 @@ class UserProfileService:
                     )
                 )
         
+        return recommendations
+    
+    def _generate_social_recommendations(self, profile: UserProfile, context: Dict) -> List[PersonalizedRecommendation]:
+        """生成社交健康相关的推荐"""
+        recommendations = []
+        
+        social_score = context.get("social_score", 0.5)
+        
+        # 根据社交情绪得分提供建议
+        if social_score < 0.3:
+            # 负面社交情绪时的建议
+            recommendations.append(
+                PersonalizedRecommendation(
+                    type="social",
+                    content="尝试与亲近的朋友进行一次深入交流",
+                    reason="增强社交联系有助于改善社交情绪",
+                    relevance_score=0.85,
+                    user_context={"social_score": social_score}
+                )
+            )
+            recommendations.append(
+                PersonalizedRecommendation(
+                    type="social",
+                    content="参加一个小型社交活动，培养新的社交关系",
+                    reason="扩展社交圈可以提供新的社交支持",
+                    relevance_score=0.75,
+                    user_context={"social_score": social_score}
+                )
+            )
+        elif social_score < 0.6:
+            # 中等社交情绪时的建议
+            recommendations.append(
+                PersonalizedRecommendation(
+                    type="social",
+                    content="定期与朋友保持联系，分享近期经历",
+                    reason="保持社交连接有助于维持良好的社交情绪",
+                    relevance_score=0.8,
+                    user_context={"social_score": social_score}
+                )
+            )
+        else:
+            # 良好社交情绪时的建议
+            recommendations.append(
+                PersonalizedRecommendation(
+                    type="social",
+                    content="可以尝试组织一次社交活动，分享你的积极体验",
+                    reason="分享积极情绪有助于增强社交连接",
+                    relevance_score=0.75,
+                    user_context={"social_score": social_score}
+                )
+            )
+        
+        return recommendations
+    
+    def _generate_risk_prevention_recommendations(self, profile: UserProfile, context: Dict) -> List[PersonalizedRecommendation]:
+        """生成风险预防相关的推荐"""
+        recommendations = []
+        
+        risk_level = context.get("risk_level", "low")
+        
+        if risk_level == "high":
+            recommendations.append(
+                PersonalizedRecommendation(
+                    type="risk",
+                    content="建议进行深呼吸冥想练习，每天10分钟",
+                    reason="有助于缓解当前较高的情绪压力",
+                    relevance_score=0.9,
+                    user_context={"risk_level": risk_level}
+                )
+            )
+            recommendations.append(
+                PersonalizedRecommendation(
+                    type="risk",
+                    content="考虑与专业咨询师交流当前的情绪状态",
+                    reason="专业支持有助于应对高风险情绪状态",
+                    relevance_score=0.85,
+                    user_context={"risk_level": risk_level}
+                )
+            )
+        elif risk_level == "medium":
+            recommendations.append(
+                PersonalizedRecommendation(
+                    type="risk",
+                    content="尝试进行30分钟的有氧运动，如散步或慢跑",
+                    reason="体育活动有助于调节情绪和减轻压力",
+                    relevance_score=0.8,
+                    user_context={"risk_level": risk_level}
+                )
+            )
+        else:
+            recommendations.append(
+                PersonalizedRecommendation(
+                    type="risk",
+                    content="继续保持健康的生活方式和社交习惯",
+                    reason="维持当前的良好状态",
+                    relevance_score=0.7,
+                    user_context={"risk_level": risk_level}
+                )
+            )
+            
         return recommendations
     
     # 其他辅助方法...

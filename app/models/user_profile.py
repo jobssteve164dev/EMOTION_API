@@ -53,6 +53,9 @@ class UserProfile(BaseModel):
     emotion_history: List[UserEmotionRecord]
     current_emotion: Optional[UserEmotionRecord] = None
     emotional_stability: float  # 情绪稳定性指标
+    social_profile: Optional[Dict] = None  # 社交情绪数据
+    risk_profile: Optional[Dict] = None  # 风险画像数据
+    behavior_profile: Optional[Dict] = None  # 行为画像数据
     last_updated: datetime
 
 class EmotionPrediction(BaseModel):
