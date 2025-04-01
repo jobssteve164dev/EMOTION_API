@@ -89,6 +89,48 @@
 pip install emotion-sdk
 ```
 
+### Docker部署
+
+本项目支持使用Docker进行快速部署，确保您已安装最新版本的Docker和Docker Compose。
+
+#### 配置环境变量
+
+```bash
+# 复制环境变量示例文件
+cp .env.example .env
+
+# 编辑环境变量，修改敏感信息如SECRET_KEY
+nano .env
+```
+
+#### 启动服务
+
+```bash
+# 构建并启动所有服务
+docker-compose up -d
+
+# 查看服务状态
+docker-compose ps
+
+# 查看API服务日志
+docker-compose logs -f api
+```
+
+#### 停止服务
+
+```bash
+# 停止所有服务但保留数据
+docker-compose down
+
+# 停止所有服务并删除数据卷(慎用)
+docker-compose down -v
+```
+
+#### 访问服务
+
+- API文档: http://localhost:8000/api/docs
+- 健康检查: http://localhost:8000/health
+
 ### 使用示例
 
 ```python

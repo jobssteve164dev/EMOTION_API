@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: emotion-api
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB_NAME=emotion_db
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+      - MODEL_NAME=bert-base-chinese
+    volumes:
+      - .:/app
+    depends_on:
+      - mongodb
+    networks:
+      - emotion-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:6.0
+    container_name: emotion-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      - MONGO_INITDB_DATABASE=emotion_db
+    networks:
+      - emotion-network
+    restart: unless-stopped
+
+  # 前端服务，如果需要的话可以取消注释
+  # frontend:
+  #   build: ./frontend
+  #   container_name: emotion-frontend
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./frontend:/app
+  #   networks:
+  #     - emotion-network
+  #   depends_on:
+  #     - api
+  #   restart: unless-stopped
+
+networks:
+  emotion-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local 
