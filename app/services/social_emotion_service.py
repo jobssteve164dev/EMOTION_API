@@ -8,6 +8,7 @@ from app.models.social_emotion import (
 )
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.core.config import settings
+import asyncio
 
 class SocialEmotionService:
     def __init__(self):
@@ -174,8 +175,28 @@ class SocialEmotionService:
     
     def _calculate_network_size(self, user_id: str) -> int:
         """计算社交网络规模"""
-        # TODO: 实现从数据库获取社交网络规模
-        return 100
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.MONGODB_DB_NAME]
+        
+        # 获取用户的互动目标用户列表
+        async def get_unique_contacts():
+            unique_contacts = set()
+            
+            # 查询该用户的所有社交互动记录
+            cursor = db.social_emotion_records.find({"user_id": user_id})
+            
+            async for record in cursor:
+                # 添加互动目标用户到集合中
+                if "target_user_id" in record and record["target_user_id"]:
+                    unique_contacts.add(record["target_user_id"])
+            
+            return len(unique_contacts)
+            
+        # 由于这是一个同步方法但需要执行异步操作，我们使用一个事件循环来运行异步函数
+        loop = asyncio.get_event_loop()
+        network_size = loop.run_until_complete(get_unique_contacts())
+        
+        return network_size if network_size > 0 else 100  # 如果没有数据，返回默认值
     
     def _analyze_interaction_patterns(self, records: List[SocialEmotionRecord]) -> Dict[str, float]:
         """分析互动模式"""

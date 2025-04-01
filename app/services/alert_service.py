@@ -163,18 +163,60 @@ class AlertService:
     
     async def _get_historical_stability(self, user_id: str, time_window: timedelta) -> Optional[float]:
         """获取历史情绪稳定性数据"""
-        # TODO: 实现从数据库获取历史稳定性数据
-        return 0.8  # 示例返回值
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.MONGODB_DB_NAME]
+        
+        # 计算时间窗口的起始时间
+        start_time = datetime.now() - time_window
+        
+        # 查询用户历史稳定性数据
+        stability_data = await db.user_stability_history.find_one(
+            {
+                "user_id": user_id,
+                "timestamp": {"$gte": start_time}
+            },
+            sort=[("timestamp", 1)]  # 获取时间窗口内最早的记录
+        )
+        
+        if stability_data:
+            return stability_data["stability_value"]
+        else:
+            # 如果没有历史数据，则查询用户档案中的稳定性数据
+            user_profile = await db.user_profiles.find_one({"user_id": user_id})
+            if user_profile and "emotional_stability" in user_profile:
+                return user_profile["emotional_stability"]
+            return 0.8  # 默认返回值
     
     async def get_alert_history(self, user_id: str) -> AlertHistory:
         """获取用户预警历史"""
-        # TODO: 实现从数据库获取预警历史
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.MONGODB_DB_NAME]
+        
+        # 查询该用户的所有预警
+        cursor = db.alerts.find({"user_id": user_id})
+        
+        alerts = []
+        active_alerts = 0
+        last_alert_time = None
+        
+        async for alert_data in cursor:
+            alert = Alert(**alert_data)
+            alerts.append(alert)
+            
+            # 统计活动预警数量
+            if alert.status == "active":
+                active_alerts += 1
+                
+            # 更新最后预警时间
+            if last_alert_time is None or alert.created_at > last_alert_time:
+                last_alert_time = alert.created_at
+        
         return AlertHistory(
             user_id=user_id,
-            alerts=[],
-            total_alerts=0,
-            active_alerts=0,
-            last_alert_time=None
+            alerts=alerts,
+            total_alerts=len(alerts),
+            active_alerts=active_alerts,
+            last_alert_time=last_alert_time
         )
     
     async def resolve_alert(self, alert_id: str) -> Alert:

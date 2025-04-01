@@ -3,6 +3,8 @@ from fastapi.security import OAuth2PasswordBearer
 from typing import Optional
 from app.models.user import User
 from app.core.security import verify_token
+from motor.motor_asyncio import AsyncIOMotorClient
+from app.core.config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 
@@ -24,8 +26,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     if user_id is None:
         raise credentials_exception
         
-    # TODO: 从数据库获取用户详情
-    # 这里简单返回一个包含ID的用户对象
-    # 在实际应用中，应该从数据库查询完整用户信息
+    # 从数据库获取用户详情
+    client = AsyncIOMotorClient(settings.MONGODB_URL)
+    db = client[settings.MONGODB_DB_NAME]
     
-    return User(id=user_id, username=payload.get("username", ""), is_active=True) 
+    user_data = await db.users.find_one({"username": user_id})
+    if user_data is None:
+        raise credentials_exception
+    
+    return User(**user_data) 
