@@ -103,6 +103,21 @@ cp .env.example .env
 nano .env
 ```
 
+以下是需要特别注意的环境变量配置：
+
+- `SECRET_KEY`: JWT认证密钥，生产环境中必须修改
+- `MONGODB_ROOT_USER`: MongoDB的根用户名
+- `MONGODB_ROOT_PASSWORD`: MongoDB根用户密码
+- `MONGODB_USER`: 应用程序使用的MongoDB用户名
+- `MONGODB_PASSWORD`: 应用程序使用的MongoDB密码
+
+推荐使用随机生成的强密码：
+
+```bash
+# 生成随机密码
+openssl rand -base64 24
+```
+
 #### 启动服务
 
 ```bash

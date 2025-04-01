@@ -7,8 +7,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - MONGODB_URL=mongodb://mongodb:27017
-      - MONGODB_DB_NAME=emotion_db
+      - MONGODB_URL=mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DB_NAME}?authSource=${MONGODB_AUTH_SOURCE:-admin}
+      - MONGODB_DB_NAME=${MONGODB_DB_NAME:-emotion_db}
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
       - MODEL_NAME=bert-base-chinese
     volumes:
@@ -28,7 +28,9 @@ services:
       - mongodb_data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
-      - MONGO_INITDB_DATABASE=emotion_db
+      - MONGO_INITDB_DATABASE=${MONGODB_DB_NAME:-emotion_db}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_ROOT_USER:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD:-rootpassword}
     networks:
       - emotion-network
     restart: unless-stopped

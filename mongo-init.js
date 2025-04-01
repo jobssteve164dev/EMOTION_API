@@ -32,4 +32,13 @@ db.users.insertOne({
     updated_at: new Date()
 });
 
-print("数据库初始化完成"); 
+// 创建应用数据库用户
+db.getSiblingDB('admin').createUser({
+    user: process.env.MONGODB_USER || 'emotion_user',
+    pwd: process.env.MONGODB_PASSWORD || 'emotion_password',
+    roles: [
+        { role: "readWrite", db: process.env.MONGODB_DB_NAME || 'emotion_db' }
+    ]
+});
+
+print("数据库初始化完成，已创建应用数据库用户"); 

@@ -20,14 +20,35 @@ if [ ! -f .env ]; then
     if [ -f .env.example ]; then
         cp .env.example .env
         echo "已创建.env文件，请根据需要修改其中的配置"
+        
+        # 自动生成随机密码
+        SECRET_KEY=$(openssl rand -base64 24 2>/dev/null || head -c 24 /dev/urandom | base64)
+        MONGO_ROOT_PWD=$(openssl rand -base64 16 2>/dev/null || head -c 16 /dev/urandom | base64)
+        MONGO_USER_PWD=$(openssl rand -base64 16 2>/dev/null || head -c 16 /dev/urandom | base64)
+        
+        # 替换.env文件中的默认密码
+        sed -i'.bak' "s|SECRET_KEY=.*|SECRET_KEY=$SECRET_KEY|g" .env 2>/dev/null || sed -i "s|SECRET_KEY=.*|SECRET_KEY=$SECRET_KEY|g" .env
+        sed -i'.bak' "s|MONGODB_ROOT_PASSWORD=.*|MONGODB_ROOT_PASSWORD=$MONGO_ROOT_PWD|g" .env 2>/dev/null || sed -i "s|MONGODB_ROOT_PASSWORD=.*|MONGODB_ROOT_PASSWORD=$MONGO_ROOT_PWD|g" .env
+        sed -i'.bak' "s|MONGODB_PASSWORD=.*|MONGODB_PASSWORD=$MONGO_USER_PWD|g" .env 2>/dev/null || sed -i "s|MONGODB_PASSWORD=.*|MONGODB_PASSWORD=$MONGO_USER_PWD|g" .env
+        
+        # 删除备份文件
+        rm -f .env.bak 2>/dev/null
+
+        echo "已自动生成安全的随机密码"
     else
         echo "错误: .env.example文件不存在"
         exit 1
     fi
 fi
 
-# 提示用户修改.env文件
-echo "请确认已正确配置.env文件中的环境变量，特别是SECRET_KEY和数据库连接信息"
+# 提示用户检查环境变量
+echo ""
+echo "请确认已正确配置.env文件中的环境变量，特别注意以下安全相关设置:"
+echo "- SECRET_KEY: JWT认证密钥"
+echo "- MONGODB_ROOT_PASSWORD: MongoDB根用户密码"
+echo "- MONGODB_PASSWORD: 应用数据库用户密码"
+echo ""
+echo "在生产环境中，请确保这些密码是强密码且保密存储"
 read -p "按回车键继续..." continue
 
 # 构建和启动服务
