@@ -1,6 +1,7 @@
 import requests
 from typing import Dict, Optional, List
 from datetime import datetime
+from app.models.social_emotion import SocialEmotionRecord
 
 class EmotionSDK:
     def __init__(self, base_url: str, api_key: Optional[str] = None):
@@ -196,6 +197,85 @@ class EmotionSDK:
             
         response = self.session.get(
             f"{self.base_url}/api/v1/alert/summary"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def record_social_interaction(self, record: SocialEmotionRecord) -> Dict:
+        """
+        记录社交互动
+        
+        Args:
+            record: 社交互动记录
+            
+        Returns:
+            Dict: 记录结果
+        """
+        if not self._token:
+            raise Exception("请先登录")
+            
+        response = self.session.post(
+            f"{self.base_url}/api/v1/social/interactions",
+            json=record.dict()
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_social_emotion_analysis(self, user_id: str) -> Dict:
+        """
+        获取社交情绪分析
+        
+        Args:
+            user_id: 用户ID
+            
+        Returns:
+            Dict: 分析结果
+        """
+        if not self._token:
+            raise Exception("请先登录")
+            
+        response = self.session.get(
+            f"{self.base_url}/api/v1/social/analysis/{user_id}"
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_social_emotion_trend(self, user_id: str, time_period: str) -> Dict:
+        """
+        获取社交情绪趋势
+        
+        Args:
+            user_id: 用户ID
+            time_period: 时间周期
+            
+        Returns:
+            Dict: 趋势数据
+        """
+        if not self._token:
+            raise Exception("请先登录")
+            
+        response = self.session.get(
+            f"{self.base_url}/api/v1/social/trend/{user_id}",
+            params={"time_period": time_period}
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_social_emotion_insights(self, user_id: str) -> Dict:
+        """
+        获取社交情绪洞察
+        
+        Args:
+            user_id: 用户ID
+            
+        Returns:
+            Dict: 洞察数据
+        """
+        if not self._token:
+            raise Exception("请先登录")
+            
+        response = self.session.get(
+            f"{self.base_url}/api/v1/social/insights/{user_id}"
         )
         response.raise_for_status()
         return response.json()

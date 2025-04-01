@@ -6,6 +6,7 @@
 3. [用户画像](#用户画像)
 4. [用户行为](#用户行为)
 5. [情绪预警](#情绪预警)
+6. [社交情绪](#社交情绪)
 
 ## 认证
 
@@ -73,25 +74,233 @@ Content-Type: application/json
 }
 ```
 
-### 预测用户情绪
+### 获取综合用户画像
+```http
+GET /api/v1/profile/comprehensive/{user_id}
+Authorization: Bearer your_token
+```
+
+响应：
+```json
+{
+    "user_id": "user_123",
+    "basic_info": {
+        "age": 28,
+        "gender": "male",
+        "occupation": "软件工程师",
+        "location": "北京"
+    },
+    "emotional_profile": {
+        "current_emotion": "positive",
+        "emotion_stability": 0.85,
+        "dominant_emotions": {
+            "happy": 0.4,
+            "calm": 0.3,
+            "excited": 0.2,
+            "anxious": 0.1
+        },
+        "emotion_trend": {
+            "positive": 0.75,
+            "neutral": 0.15,
+            "negative": 0.1
+        }
+    },
+    "social_profile": {
+        "social_network_size": 150,
+        "social_engagement": 0.85,
+        "relationship_quality": {
+            "family": 0.9,
+            "friends": 0.85,
+            "colleagues": 0.75
+        },
+        "social_support": 0.85,
+        "social_stress": 0.2
+    },
+    "behavior_profile": {
+        "active_hours": [9, 10, 11, 14, 15, 16, 20, 21],
+        "preferred_activities": {
+            "chat": 0.4,
+            "work": 0.3,
+            "exercise": 0.2,
+            "entertainment": 0.1
+        },
+        "interaction_patterns": {
+            "morning": "productive",
+            "afternoon": "social",
+            "evening": "relaxed"
+        }
+    },
+    "risk_profile": {
+        "alert_level": "low",
+        "active_alerts": 0,
+        "risk_factors": [
+            {
+                "type": "social_isolation",
+                "level": "low",
+                "description": "社交互动频率正常"
+            }
+        ],
+        "protective_factors": [
+            {
+                "type": "strong_social_support",
+                "level": "high",
+                "description": "有良好的社交支持网络"
+            }
+        ]
+    },
+    "recommendations": {
+        "emotional_health": [
+            "继续保持积极的心态",
+            "适当增加户外活动时间"
+        ],
+        "social_health": [
+            "可以尝试参加更多社交活动",
+            "建议与朋友保持定期联系"
+        ],
+        "behavior_improvement": [
+            "建议保持规律的作息时间",
+            "可以增加运动时间"
+        ],
+        "risk_prevention": [
+            "继续保持良好的社交习惯",
+            "注意工作与生活的平衡"
+        ]
+    },
+    "last_updated": "2024-03-31T10:00:00"
+}
+```
+
+### 获取用户画像洞察报告
+```http
+GET /api/v1/profile/insights/{user_id}
+Authorization: Bearer your_token
+Query Parameters:
+- time_period: 时间周期（可选值：week, month, quarter, year）
+```
+
+响应：
+```json
+{
+    "user_id": "user_123",
+    "time_period": "month",
+    "emotional_insights": {
+        "stability_trend": [0.8, 0.82, 0.85, 0.83, 0.85],
+        "emotion_distribution": {
+            "positive": 0.75,
+            "neutral": 0.15,
+            "negative": 0.1
+        },
+        "triggers": {
+            "positive": ["工作成就", "社交互动", "运动"],
+            "negative": ["工作压力", "睡眠不足"]
+        }
+    },
+    "social_insights": {
+        "network_growth": [100, 105, 110, 115, 120],
+        "interaction_quality": {
+            "chat": 0.85,
+            "meetup": 0.9,
+            "online": 0.8
+        },
+        "relationship_strength": {
+            "close_friends": 5,
+            "regular_contacts": 15,
+            "acquaintances": 100
+        }
+    },
+    "behavior_insights": {
+        "activity_patterns": {
+            "morning": ["工作", "运动"],
+            "afternoon": ["会议", "社交"],
+            "evening": ["休闲", "学习"]
+        },
+        "productivity_metrics": {
+            "focus_time": 6.5,
+            "breaks": 4,
+            "distractions": 2
+        }
+    },
+    "risk_insights": {
+        "alert_history": [
+            {
+                "date": "2024-03-15",
+                "type": "stress",
+                "level": "medium",
+                "resolved": true
+            }
+        ],
+        "risk_trends": {
+            "stress": "decreasing",
+            "anxiety": "stable",
+            "depression": "low"
+        }
+    },
+    "recommendations": {
+        "short_term": [
+            "增加户外活动时间",
+            "保持规律的作息"
+        ],
+        "long_term": [
+            "培养新的兴趣爱好",
+            "建立更广泛的社交网络"
+        ]
+    },
+    "generated_at": "2024-03-31T10:00:00"
+}
+```
+
+### 预测用户情绪状态
 ```http
 POST /api/v1/profile/predict-emotion
 Authorization: Bearer your_token
 Content-Type: application/json
 
 {
+    "user_id": "user_123",
     "context": {
         "time_of_day": 0.5,
         "day_of_week": 1,
-        "weather_score": 0.8
+        "weather_score": 0.8,
+        "recent_activities": ["work", "exercise"],
+        "social_interactions": 3,
+        "sleep_quality": 0.9
     }
 }
 ```
 
-### 获取情绪稳定性
-```http
-GET /api/v1/profile/emotion-stability
-Authorization: Bearer your_token
+响应：
+```json
+{
+    "user_id": "user_123",
+    "predicted_emotion": "positive",
+    "confidence": 0.85,
+    "factors": {
+        "positive": [
+            {
+                "factor": "recent_activities",
+                "impact": 0.3,
+                "details": "今天完成了重要工作并进行了运动"
+            },
+            {
+                "factor": "social_interactions",
+                "impact": 0.2,
+                "details": "有3次积极的社交互动"
+            }
+        ],
+        "negative": [
+            {
+                "factor": "time_of_day",
+                "impact": 0.1,
+                "details": "下午可能有些疲劳"
+            }
+        ]
+    },
+    "recommendations": [
+        "可以适当休息一下",
+        "建议与同事交流工作进展"
+    ],
+    "predicted_at": "2024-03-31T10:00:00"
+}
 ```
 
 ## 用户行为
@@ -212,6 +421,138 @@ Authorization: Bearer your_token
 {
     "status": "success",
     "message": "汇总报告已发送"
+}
+```
+
+## 社交情绪
+
+### 记录社交互动
+```http
+POST /api/v1/social/interactions
+Authorization: Bearer your_token
+Content-Type: application/json
+
+{
+    "user_id": "user_123",
+    "interaction_type": "chat",
+    "emotion_type": "positive",
+    "intensity": 0.8,
+    "context": "与朋友聊天",
+    "timestamp": "2024-03-31T10:00:00",
+    "interaction_id": "interaction_456",
+    "target_user_id": "user_789"
+}
+```
+
+响应：
+```json
+{
+    "id": "record_123",
+    "user_id": "user_123",
+    "interaction_type": "chat",
+    "emotion_type": "positive",
+    "intensity": 0.8,
+    "context": "与朋友聊天",
+    "timestamp": "2024-03-31T10:00:00",
+    "interaction_id": "interaction_456",
+    "target_user_id": "user_789"
+}
+```
+
+### 获取社交情绪分析
+```http
+GET /api/v1/social/analysis/{user_id}
+Authorization: Bearer your_token
+```
+
+响应：
+```json
+{
+    "user_id": "user_123",
+    "social_emotion_score": 0.75,
+    "social_engagement": 0.85,
+    "social_network_size": 100,
+    "interaction_patterns": {
+        "chat": 0.4,
+        "comment": 0.2,
+        "like": 0.2,
+        "share": 0.1,
+        "follow": 0.1
+    },
+    "emotional_contagion": 0.65
+}
+```
+
+### 获取社交情绪趋势
+```http
+GET /api/v1/social/trend/{user_id}
+Authorization: Bearer your_token
+Query Parameters:
+- time_period: 时间周期（可选值：day, week, month, year）
+```
+
+响应：
+```json
+{
+    "user_id": "user_123",
+    "time_period": "week",
+    "emotion_scores": [0.8, 0.7, 0.85, 0.75, 0.9, 0.8, 0.85],
+    "engagement_scores": [0.9, 0.85, 0.95, 0.9, 0.85, 0.9, 0.95],
+    "network_growth": [100, 102, 105, 108, 110, 112, 115],
+    "interaction_counts": {
+        "chat": [10, 12, 8, 15, 11, 13, 9],
+        "comment": [5, 6, 4, 7, 5, 6, 4],
+        "like": [20, 25, 18, 22, 24, 20, 23]
+    },
+    "timestamps": [
+        "2024-03-25T00:00:00",
+        "2024-03-26T00:00:00",
+        "2024-03-27T00:00:00",
+        "2024-03-28T00:00:00",
+        "2024-03-29T00:00:00",
+        "2024-03-30T00:00:00",
+        "2024-03-31T00:00:00"
+    ]
+}
+```
+
+### 获取社交情绪洞察
+```http
+GET /api/v1/social/insights/{user_id}
+Authorization: Bearer your_token
+```
+
+响应：
+```json
+{
+    "user_id": "user_123",
+    "top_interactions": [
+        {
+            "type": "chat",
+            "frequency": 0.4,
+            "emotional_impact": 0.85
+        },
+        {
+            "type": "comment",
+            "frequency": 0.2,
+            "emotional_impact": 0.75
+        }
+    ],
+    "emotional_impact": {
+        "chat": 0.85,
+        "comment": 0.75,
+        "like": 0.6,
+        "share": 0.8,
+        "follow": 0.7
+    },
+    "social_support": 0.85,
+    "social_stress": 0.2,
+    "relationship_quality": {
+        "family": 0.9,
+        "friends": 0.85,
+        "colleagues": 0.75,
+        "acquaintances": 0.6
+    }
 }
 ```
 

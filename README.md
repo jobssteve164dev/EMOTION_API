@@ -1,6 +1,6 @@
 # 情感分析引擎
 
-一个强大的情感分析引擎，提供情绪分析、用户画像、行为分析和情绪预警等功能。
+一个强大的情感分析引擎，提供情绪分析、用户画像、行为分析、情绪预警和社交情绪分析等功能。
 
 ## 功能特点
 
@@ -10,6 +10,7 @@
 - 用户行为分析
 - 情绪预警系统
 - 个性化推荐
+- 社交情绪分析
 
 ## 情绪预警系统
 
@@ -32,6 +33,54 @@
 - 预警汇总报告
 - 预警处理流程
 
+## 社交情绪分析
+
+社交情绪分析系统能够分析用户在社交互动中的情绪变化和社交关系质量。主要功能包括：
+
+### 社交互动分析
+- 记录各类社交互动
+- 分析互动模式
+- 计算社交参与度
+- 评估情绪传染度
+
+### 社交网络分析
+- 社交网络规模统计
+- 关系质量评估
+- 社交支持度分析
+- 社交压力评估
+
+### 趋势分析
+- 社交情绪趋势
+- 参与度趋势
+- 网络增长趋势
+- 互动数量趋势
+
+### 洞察报告
+- 最频繁互动类型
+- 情绪影响分析
+- 关系质量评估
+- 社交健康建议
+
+## 功能特性
+
+### 用户画像
+- 综合用户画像分析
+  - 情绪画像：情绪状态、稳定性、主要情绪分布
+  - 社交画像：社交网络规模、参与度、关系质量
+  - 行为画像：活跃时段、偏好活动、行为模式
+  - 风险画像：预警级别、活动预警、风险因素
+  - 个性化建议：基于多维度分析的建议
+- 用户画像洞察报告
+  - 情绪洞察：稳定性趋势、情绪分布、触发因素
+  - 社交洞察：网络增长、互动质量、关系发展
+  - 行为洞察：活动模式、生产力指标、行为变化
+  - 风险洞察：预警历史、风险趋势、干预效果
+  - 短期和长期建议
+- 情绪预测
+  - 基于上下文的情绪预测
+  - 影响因素分析
+  - 个性化建议生成
+
 ## 快速开始
 
 ### 安装
@@ -44,6 +93,7 @@ pip install emotion-sdk
 
 ```python
 from emotion_sdk import EmotionSDK
+from datetime import datetime
 
 # 初始化SDK
 sdk = EmotionSDK(base_url="http://your-api-url")
@@ -63,73 +113,50 @@ sdk.record_emotion(
     source="用户反馈"
 )
 
+# 记录社交互动
+sdk.record_social_interaction(
+    user_id="user_123",
+    interaction_type="chat",
+    emotion_type="positive",
+    intensity=0.8,
+    context="与朋友聊天",
+    timestamp=datetime.now()
+)
+
+# 获取社交情绪分析
+social_analysis = sdk.get_social_emotion_analysis("user_123")
+print(f"社交情绪得分: {social_analysis['social_emotion_score']}")
+
 # 获取预警历史
 alerts = sdk.get_alert_history()
 print(f"当前活动预警数: {alerts['active_alerts']}")
 
+# 获取综合用户画像
+profile = sdk.get_comprehensive_profile("user_123")
+print(f"用户情绪稳定性: {profile['emotional_profile']['emotion_stability']}")
+print(f"社交参与度: {profile['social_profile']['social_engagement']}")
+
+# 获取用户画像洞察报告
+insights = sdk.get_profile_insights("user_123", time_period="month")
+print("情绪洞察:")
+print(f"稳定性趋势: {insights['emotional_insights']['stability_trend']}")
+print(f"情绪分布: {insights['emotional_insights']['emotion_distribution']}")
+
+# 预测用户情绪状态
+prediction = sdk.predict_emotion(
+    user_id="user_123",
+    context={
+        "time_of_day": 0.5,
+        "day_of_week": 1,
+        "weather_score": 0.8,
+        "recent_activities": ["work", "exercise"],
+        "social_interactions": 3,
+        "sleep_quality": 0.9
+    }
+)
+print(f"预测情绪: {prediction['predicted_emotion']}")
+print(f"置信度: {prediction['confidence']}")
+
 # 关闭连接
 sdk.close()
-```
-
-## API文档
-
-详细的API文档请参考 [API文档](docs/API.md)
-
-## SDK文档
-
-详细的SDK使用说明请参考 [SDK文档](docs/SDK.md)
-
-## 开发环境设置
-
-1. 克隆仓库
-```bash
-git clone https://github.com/your-username/emotion-api.git
-cd emotion-api
-```
-
-2. 创建虚拟环境
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
-
-3. 安装依赖
-```bash
-pip install -r requirements.txt
-```
-
-4. 配置环境变量
-```bash
-cp .env.example .env
-# 编辑 .env 文件，设置必要的环境变量
-```
-
-5. 运行开发服务器
-```bash
-uvicorn app.main:app --reload
-```
-
-## 测试
-
-运行测试：
-```bash
-pytest
-```
-
-## 贡献指南
-
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
-
-## 许可证
-
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
-
-## 联系方式
-
-- 项目维护者：[Your Name](mailto:your.email@example.com)
-- 项目主页：[GitHub](https://github.com/your-username/emotion-api) 
+```# EMOTION_API

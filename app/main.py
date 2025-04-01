@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, emotion, user_profile, user_behavior, alert
+from app.api import auth, emotion, user_profile, user_behavior, alert, social_emotion
 from app.core.config import settings
 
 app = FastAPI(
@@ -16,6 +16,8 @@ app = FastAPI(
     * 用户画像分析
     * 用户行为分析
     * 个性化推荐
+    * 社交情绪分析
+    * 情绪预警系统
     
     使用说明：
     1. 首先通过 /api/v1/token 获取访问令牌
@@ -43,6 +45,7 @@ app.include_router(emotion.router, prefix="/api/v1/emotion", tags=["情绪分析
 app.include_router(user_profile.router, prefix="/api/v1/profile", tags=["用户画像"])
 app.include_router(user_behavior.router, prefix="/api/v1/behavior", tags=["用户行为"])
 app.include_router(alert.router, prefix="/api/v1/alert", tags=["情绪预警"])
+app.include_router(social_emotion.router, prefix="/api/v1/social", tags=["社交情绪"])
 
 @app.get("/")
 async def root():
@@ -63,6 +66,7 @@ async def health_check():
             "authentication": "available",
             "user_profile": "available",
             "user_behavior": "available",
-            "alert_system": "available"
+            "alert_system": "available",
+            "social_emotion": "available"
         }
     } 
