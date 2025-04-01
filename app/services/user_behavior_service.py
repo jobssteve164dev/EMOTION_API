@@ -6,6 +6,8 @@ from app.models.user_behavior import (
     UserBehavior, BehaviorPattern, BehaviorInsight,
     UserBehaviorProfile, BehaviorType
 )
+from motor.motor_asyncio import AsyncIOMotorClient
+from app.core.config import settings
 
 class UserBehaviorService:
     def __init__(self):
@@ -252,10 +254,52 @@ class UserBehaviorService:
     # 数据库操作方法
     async def _get_user_behavior_profile(self, user_id: str) -> UserBehaviorProfile:
         """从数据库获取用户行为画像"""
-        # TODO: 实现数据库查询
-        pass
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.MONGODB_DB_NAME]
+        
+        profile_data = await db.user_behaviors.find_one({"user_id": user_id})
+        
+        if profile_data:
+            # 如果找到了用户行为画像数据，就转换为UserBehaviorProfile对象
+            return UserBehaviorProfile(**profile_data)
+        else:
+            # 如果没有找到，创建一个新的空用户行为画像
+            current_time = datetime.utcnow()
+            new_profile = UserBehaviorProfile(
+                user_id=user_id,
+                behavior_history=[],
+                behavior_pattern=BehaviorPattern(
+                    daily_pattern={},
+                    weekly_pattern={},
+                    behavior_sequence=[],
+                    interaction_graph={}
+                ),
+                behavior_insight=BehaviorInsight(
+                    active_hours=[],
+                    favorite_features=[],
+                    behavior_clusters=[],
+                    engagement_score=0.0,
+                    retention_score=0.0
+                ),
+                last_updated=current_time
+            )
+            
+            # 保存到数据库
+            await self._save_user_behavior_profile(new_profile)
+            
+            return new_profile
     
     async def _save_user_behavior_profile(self, profile: UserBehaviorProfile):
         """保存用户行为画像到数据库"""
-        # TODO: 实现数据库保存
-        pass 
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.MONGODB_DB_NAME]
+        
+        # 将UserBehaviorProfile对象转换为字典
+        profile_dict = profile.dict(by_alias=True)
+        
+        # 更新或插入用户行为画像数据
+        await db.user_behaviors.update_one(
+            {"user_id": profile.user_id},
+            {"$set": profile_dict},
+            upsert=True
+        ) 

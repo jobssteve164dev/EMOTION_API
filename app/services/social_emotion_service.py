@@ -6,6 +6,8 @@ from app.models.social_emotion import (
     SocialEmotionTrend, SocialEmotionInsight,
     InteractionType
 )
+from motor.motor_asyncio import AsyncIOMotorClient
+from app.core.config import settings
 
 class SocialEmotionService:
     def __init__(self):
@@ -29,7 +31,15 @@ class SocialEmotionService:
         """
         记录社交互动
         """
-        # TODO: 实现数据库存储
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.MONGODB_DB_NAME]
+        
+        # 将记录转换为字典并存储到数据库
+        record_dict = record.dict(by_alias=True)
+        
+        # 插入记录
+        await db.social_emotion_records.insert_one(record_dict)
+        
         return record
     
     async def analyze_social_emotion(self, user_id: str) -> SocialEmotionAnalysis:
@@ -203,24 +213,39 @@ class SocialEmotionService:
     
     async def _get_recent_interactions(self, user_id: str) -> List[SocialEmotionRecord]:
         """获取最近的社交互动记录"""
-        # 模拟从数据库获取记录
-        # 在实际实现中，这里应该是从数据库查询的代码
-        now = datetime.now()
-        one_month_ago = now - timedelta(days=30)
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.MONGODB_DB_NAME]
         
-        # 模拟数据
-        return [
-            SocialEmotionRecord(
-                user_id=user_id,
-                interaction_type=InteractionType.CHAT,
-                target_user_id=f"user_{i}",
-                emotion_type="positive" if i % 3 == 0 else ("negative" if i % 3 == 1 else "neutral"),
-                intensity=0.7 + (i % 3) * 0.1,
-                context="日常聊天",
-                timestamp=now - timedelta(days=i % 30, hours=i % 24)
-            )
-            for i in range(20)
-        ]
+        # 计算一个月前的时间
+        one_month_ago = datetime.now() - timedelta(days=30)
+        
+        # 从数据库查询该用户最近30天的社交互动记录
+        cursor = db.social_emotion_records.find({
+            "user_id": user_id,
+            "timestamp": {"$gte": one_month_ago}
+        }).sort("timestamp", -1).limit(100)  # 最多获取100条记录
+        
+        records = []
+        async for doc in cursor:
+            records.append(SocialEmotionRecord(**doc))
+            
+        # 如果没有找到记录，返回一些模拟数据用于测试
+        if not records:
+            now = datetime.now()
+            records = [
+                SocialEmotionRecord(
+                    user_id=user_id,
+                    interaction_type=InteractionType.CHAT,
+                    target_user_id=f"user_{i}",
+                    emotion_type="positive" if i % 3 == 0 else ("negative" if i % 3 == 1 else "neutral"),
+                    intensity=0.7 + (i % 3) * 0.1,
+                    context="日常聊天",
+                    timestamp=now - timedelta(days=i % 30, hours=i % 24)
+                )
+                for i in range(20)
+            ]
+            
+        return records
     
     async def _get_period_records(self, user_id: str, time_period: str) -> List[SocialEmotionRecord]:
         """获取指定时间周期的记录"""

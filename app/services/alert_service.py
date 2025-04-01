@@ -3,6 +3,8 @@ from typing import List, Dict, Optional
 from app.models.alert import Alert, AlertRule, AlertLevel, AlertHistory
 from app.models.user_profile import UserEmotionRecord
 from app.services.user_profile_service import UserProfileService
+from motor.motor_asyncio import AsyncIOMotorClient
+from app.core.config import settings
 
 class AlertService:
     def __init__(self):
@@ -177,10 +179,47 @@ class AlertService:
     
     async def resolve_alert(self, alert_id: str) -> Alert:
         """解决预警"""
-        # TODO: 实现预警解决逻辑
-        pass
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.MONGODB_DB_NAME]
+        
+        # 查找预警
+        alert_data = await db.alerts.find_one({"id": alert_id})
+        
+        if not alert_data:
+            raise ValueError(f"找不到ID为{alert_id}的预警")
+            
+        # 更新预警状态为已解决
+        alert_data["status"] = "resolved"
+        alert_data["resolved_at"] = datetime.now()
+        
+        # 更新数据库
+        await db.alerts.update_one(
+            {"id": alert_id},
+            {"$set": {"status": "resolved", "resolved_at": datetime.now()}}
+        )
+        
+        # 返回更新后的预警对象
+        return Alert(**alert_data)
     
     async def dismiss_alert(self, alert_id: str) -> Alert:
         """忽略预警"""
-        # TODO: 实现预警忽略逻辑
-        pass 
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.MONGODB_DB_NAME]
+        
+        # 查找预警
+        alert_data = await db.alerts.find_one({"id": alert_id})
+        
+        if not alert_data:
+            raise ValueError(f"找不到ID为{alert_id}的预警")
+            
+        # 更新预警状态为已忽略
+        alert_data["status"] = "dismissed"
+        
+        # 更新数据库
+        await db.alerts.update_one(
+            {"id": alert_id},
+            {"$set": {"status": "dismissed"}}
+        )
+        
+        # 返回更新后的预警对象
+        return Alert(**alert_data) 

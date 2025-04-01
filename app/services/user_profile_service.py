@@ -405,13 +405,72 @@ class UserProfileService:
     # 其他辅助方法...
     async def _get_user_profile(self, user_id: str) -> UserProfile:
         """从数据库获取用户画像"""
-        # TODO: 实现数据库查询
-        pass
+        # 从MongoDB中查询用户画像
+        from motor.motor_asyncio import AsyncIOMotorClient
+        from app.core.config import settings
+        from uuid import uuid4
+        
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.MONGODB_DB_NAME]
+        
+        profile_data = await db.user_profiles.find_one({"user_id": user_id})
+        
+        if profile_data:
+            # 如果找到了用户画像数据，就转换为UserProfile对象
+            return UserProfile(**profile_data)
+        else:
+            # 如果没有找到，创建一个新的空用户画像
+            current_time = datetime.utcnow()
+            new_profile = UserProfile(
+                user_id=user_id,
+                emotional_stability=0.5,
+                emotion_history=[],
+                current_emotion=None,
+                emotion_pattern=UserEmotionPattern(
+                    daily_pattern={},
+                    weekly_pattern={},
+                    triggers={},
+                    coping_strategies={}
+                ),
+                personality=UserPersonality(
+                    openness=0.5,
+                    conscientiousness=0.5,
+                    extraversion=0.5,
+                    agreeableness=0.5,
+                    neuroticism=0.5,
+                    last_updated=current_time
+                ),
+                interests=UserInterests(
+                    activities=[],
+                    topics=[],
+                    preferences={},
+                    last_updated=current_time
+                ),
+                last_updated=current_time
+            )
+            
+            # 保存到数据库
+            await self._save_user_profile(new_profile)
+            
+            return new_profile
     
     async def _save_user_profile(self, profile: UserProfile):
         """保存用户画像到数据库"""
-        # TODO: 实现数据库保存
-        pass
+        from motor.motor_asyncio import AsyncIOMotorClient
+        from app.core.config import settings
+        
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.MONGODB_DB_NAME]
+        
+        # 将UserProfile对象转换为字典
+        profile_dict = profile.dict(by_alias=True)
+        
+        # 更新或插入用户画像数据
+        await db.user_profiles.update_one(
+            {"user_id": profile.user_id},
+            {"$set": profile_dict},
+            upsert=True
+        )
     
     def _analyze_daily_pattern(self, emotion_history: List[UserEmotionRecord]) -> Dict[str, float]:
         """分析每日情绪模式"""
